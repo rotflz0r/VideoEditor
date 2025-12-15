@@ -105,6 +105,7 @@ class ControlButton {
   createControlButton() {
     this.btn = createElement('button', {
       properties: {
+        // type: 'button',
         className: 'control-btn',
         title: this.title || '',
         onclick: this.handleClick.bind(this),

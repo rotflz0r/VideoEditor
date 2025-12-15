@@ -4,6 +4,11 @@ export function cloneAllCanvasFrames(original, clone) {
     const original = originalCanvases[index];
     var context = newCanvas.getContext('2d');
 
+    if (original.width === 0 || original.height === 0) {
+      original.width = 400;
+      original.height = 200;
+    }
+
     //set dimensions
     newCanvas.width = original.width;
     newCanvas.height = original.height;
