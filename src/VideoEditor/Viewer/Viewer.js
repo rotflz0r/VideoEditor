@@ -199,18 +199,17 @@ class Viewer {
     const aspectRatio = height / width;
     const vidWrap = this.video.closest('.video-wrap');
     const vidContainer = this.video.closest('.video-container');
-    const vidMaxWidth = calcViewerMaxWidth(
-      this.video,
-      this.maxHeight,
-      this.maxHeightPercent,
-      aspectRatio
-    );
-    // set max width of video container
-    vidContainer.style.width = `${vidMaxWidth}px`;
-    // set aspect ratio of video wrap
-    vidWrap.style.paddingBottom = `${aspectRatio * 100}%`;
-    // get new width
+
     requestAnimationFrame(() => {
+      const vidMaxWidth = calcViewerMaxWidth(
+        this.video,
+        this.maxHeight,
+        this.maxHeightPercent,
+        aspectRatio
+      );
+      vidContainer.style.width = `${vidMaxWidth}px`;
+      vidWrap.style.paddingBottom = `${aspectRatio * 100}%`;
+
       if (this.previousBounds) {
         const { x, y, scale } = calcTransformValues(
           vidMaxWidth,
