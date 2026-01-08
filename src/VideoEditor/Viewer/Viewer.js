@@ -207,6 +207,7 @@ class Viewer {
         this.maxHeightPercent,
         aspectRatio
       );
+      console.log(vidMaxWidth);
       vidContainer.style.width = `${vidMaxWidth}px`;
       vidWrap.style.paddingBottom = `${aspectRatio * 100}%`;
 

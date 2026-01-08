@@ -65,9 +65,35 @@ export const calcTransformValues = (vidMaxWidth, vidContainer, video, previousBo
 };
 
 export const calcViewerMaxWidth = (video, maxHeight, maxHeightPercent, aspectRatio) => {
+  let vidMaxWidth;
+  console.log(video);
+  console.log(video.getBoundingClientRect());
+  console.log(video.width);
+  const vidBounds = video.getBoundingClientRect();
   const vidEditorWrapper = video.closest('.video-editor-wrapper');
   const vidEditorDimensions = getComputedWidthAndHeightForElement(vidEditorWrapper);
-  return vidEditorDimensions.width;
+  // limit height of video display if maxHeight (in pixels) has been set
+  if (maxHeight && vidBounds.height > maxHeight) {
+    // find width based on maxHeight of video and apply to vid container
+    vidMaxWidth = maxHeight / aspectRatio;
+  } else {
+    // limit height of video display if screen size exceeds limit
+    // HOWEVER, use the primary ancestor of the editor as the limit, not the screen
+    // so that the video doesn't get too small when the editor is in a small container
+    const maxHeight = vidEditorDimensions.height * maxHeightPercent;
+    vidMaxWidth = maxHeight / aspectRatio;
+  }
+  if (!vidMaxWidth) {
+    throw new Error('vidMaxWidth is undefined');
+  }
+
+  // limit width of video display to the width of the editor
+  if (vidMaxWidth > vidEditorDimensions.width) {
+    vidMaxWidth = vidEditorDimensions.width;
+  }
+  console.log(vidBounds.width);
+  console.log(vidEditorDimensions.width);
+  return vidBounds.width;
 };
 
 export const getComputedWidthAndHeightForElement = (el) => {

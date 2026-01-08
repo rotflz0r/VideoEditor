@@ -410,6 +410,10 @@ class VideoEditor {
     const videoEditor = await this.createVideoEditor();
     wrapper.append(videoEditor);
   }
+
+  recalculateVideoSize() {
+    this.viewer.updateViewerContainerDimensions();
+  }
 }
 
 export default VideoEditor;
