@@ -65,35 +65,27 @@ export const calcTransformValues = (vidMaxWidth, vidContainer, video, previousBo
 };
 
 export const calcViewerMaxWidth = (video, maxHeight, maxHeightPercent, aspectRatio) => {
-  let vidMaxWidth;
-  console.log(video);
-  console.log(video.getBoundingClientRect());
-  console.log(video.width);
-  const vidBounds = video.getBoundingClientRect();
-  const vidEditorWrapper = video.closest('.video-editor-wrapper');
-  const vidEditorDimensions = getComputedWidthAndHeightForElement(vidEditorWrapper);
-  // limit height of video display if maxHeight (in pixels) has been set
-  if (maxHeight && vidBounds.height > maxHeight) {
-    // find width based on maxHeight of video and apply to vid container
-    vidMaxWidth = maxHeight / aspectRatio;
-  } else {
-    // limit height of video display if screen size exceeds limit
-    // HOWEVER, use the primary ancestor of the editor as the limit, not the screen
-    // so that the video doesn't get too small when the editor is in a small container
-    const maxHeight = vidEditorDimensions.height * maxHeightPercent;
-    vidMaxWidth = maxHeight / aspectRatio;
-  }
-  if (!vidMaxWidth) {
-    throw new Error('vidMaxWidth is undefined');
+  const container = video.closest('.video-flexbox-container').getBoundingClientRect();
+  const maxVideoWidth = video.videoWidth;
+  const maxVideoHeight = video.videoHeight;
+  const maxContainerWidth = container.width
+  const maxContainerHeight = container.height
+
+  if (maxVideoWidth === 0 || maxVideoHeight === 0) {
+    return container.width;
   }
 
-  // limit width of video display to the width of the editor
-  if (vidMaxWidth > vidEditorDimensions.width) {
-    vidMaxWidth = vidEditorDimensions.width;
+  const videoAspectRatio = maxVideoWidth / maxVideoHeight;
+  const containerAspectRatio = maxContainerWidth / maxContainerHeight;
+
+  let height;
+
+  if (containerAspectRatio > videoAspectRatio) {
+    height = Math.min(maxContainerHeight, maxVideoHeight);
+    return height * videoAspectRatio;
+  } else {
+    return Math.min(maxContainerWidth, maxVideoWidth);
   }
-  console.log(vidBounds.width);
-  console.log(vidEditorDimensions.width);
-  return vidBounds.width;
 };
 
 export const getComputedWidthAndHeightForElement = (el) => {

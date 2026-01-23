@@ -495,7 +495,6 @@ class Timeline {
       ];
       scale = parseFloat(initialCrop?.scale);
     }
-    this.video.style.width = 'auto';
     const src = await this.getCurrentVideoFrameUrlObject().catch((error) => {
       console.error('cropper faied to init', error);
     });

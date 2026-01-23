@@ -11,7 +11,7 @@ class Viewer {
   constructor({ src, maxHeight, loader, onLoad, onLoadMetaData, onViewerResize }) {
     this.src = src;
     this.maxHeight = maxHeight;
-    this.maxHeightPercent = 0.6;
+    this.maxHeightPercent = 0.8;
     this.previousBounds = null;
     this.video = this.createVideo();
     this.loader = loader;
@@ -207,7 +207,7 @@ class Viewer {
         this.maxHeightPercent,
         aspectRatio
       );
-      console.log(vidMaxWidth);
+      // console.log(vidMaxWidth);
       vidContainer.style.width = `${vidMaxWidth}px`;
       vidWrap.style.paddingBottom = `${aspectRatio * 100}%`;
 
@@ -220,7 +220,8 @@ class Viewer {
         );
         // update transform value
         const newTransformValue = `translate3d(${x}px, ${y}px, 0px) scale(${scale})`;
-        this.video.style.transform = newTransformValue;
+        // FIXME
+        // this.video.style.transform = newTransformValue;
         if (this.onViewerResize instanceof Function) {
           this.onViewerResize();
         }
