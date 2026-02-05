@@ -1,7 +1,6 @@
 import MenuBar from './MenuBar/MenuBar.js';
 import Viewer from './Viewer/Viewer.js';
 import Timeline from './Timeline/Timeline.js';
-import Instructions from './Instructions';
 import { createCropSVG } from './utils/svg-crop-overlay.js';
 import Loader from './Loader/Loader.js';
 import context from './context.js';
@@ -298,16 +297,11 @@ class VideoEditor {
   /**
    * Handle Help Button Click
    *
-   * Providing a custom onClickHelpButton callback
-   * will override the default instructions
-   *
    * @param {*} event
    */
   handleClickHelpButton(event) {
     if (this.onClickHelpButton instanceof Function) {
       this.onClickHelpButton(event);
-    } else {
-      this.instructions.begin();
     }
   }
 
@@ -400,9 +394,6 @@ class VideoEditor {
 
   async render(container) {
     const wrapper = this.createWrapper();
-    // instructions
-    this.instructions = new Instructions({ container });
-    this.instructions.render(container);
     //  loader
     this.loader.render(wrapper);
     container.append(wrapper);
