@@ -23,4 +23,5 @@
  * @property {number} min - the min time range of the video editor
  * @property {number} max - the max time range of the video editor
  * @property {number} maxDuration - the max duration of the video
+ * @property {number} minDuration - the min duration of the video
  */
