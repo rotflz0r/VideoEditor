@@ -23,7 +23,7 @@ function initializeVideoEditor() {
       // time: { in: 5, out: 10 },
     },
 
-    limit: { maxDuration: 5 },
+    limit: { maxDuration: 5, minDuration: 2 },
     // optionally, a menu bar items with font awesome icons
     // menuBarButtons: {
     //   inlineEndButtons: {
@@ -47,7 +47,7 @@ function initializeVideoEditor() {
     // onClickHelpButton: (event) => {
     //   // custom help button
     // },
-    onRangeLimit: ({ marker, maxDuration, time }) => {
+    onRangeLimit: ({ marker, maxDuration, minDuration, time }) => {
       // do something when the range limit is reached
     },
     onRangeUpdate: (...args) => {

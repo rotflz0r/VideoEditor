@@ -55,8 +55,8 @@ import './video-editor.css';
  * ### limit
  *
  * @type object
- * An object with the max duration the video can be trimmed to.
- * Example: {  maxDuration: 5 }
+ * An object with the max/min duration the video can be trimmed to.
+ * Example: {  maxDuration: 5, minDuration: 2 }
  *
  * ### menuBarButtons
  *
@@ -101,7 +101,7 @@ import './video-editor.css';
  *
  * @type function
  * Callback when the range limit is reached
- * Example: ({ marker, maxDuration, time }) => { console.log('range limit reached') }
+ * Example: ({ marker, maxDuration, minDuration, time }) => { console.log('range limit reached') }
  *
  *
  * ### onMarkerDragStart
