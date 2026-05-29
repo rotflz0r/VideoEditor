@@ -32,7 +32,7 @@ const options = {
         crop: { h: 173, scale: '0.2', w: 343, x: '308', y: '153' },
         time: { in: 5, out: 10 },
     },
-    limit: { maxDuration: 10 },
+    limit: { maxDuration: 10, minDuration: 2 },
     menuBarButtons: {
         inlineEndButtons: {
         cancel: {
@@ -54,7 +54,7 @@ const options = {
     onClickHelpButton: (event) => {
         // custom help button
     },
-    onRangeLimit: ({ marker, maxDuration, time }) => {
+    onRangeLimit: ({ marker, maxDuration, minDuration, time }) => {
         // do something when the range limit is reached
     },
     onRangeUpdate: (...args) => {
@@ -136,9 +136,9 @@ The max height of the video editor. The default is 300.
 
 @type object
 
-An object with the max duration the video can be trimmed to
+An object with the max/min duration the video can be trimmed to
 
-Example: { maxDuration: 5 }
+Example: { maxDuration: 5, minDuration: 2 }
 
 ### menuBarButtons
 
@@ -200,7 +200,7 @@ Example: (currentIndex, { in : 0, out : 1 }) => { console.log(currentIndex) }
 
 Callback when the range limit is reached
 
-Example: ({ marker, maxDuration, time }) => { console.log('range limit reached') }
+Example: ({ marker, maxDuration, minDuration, time }) => { console.log('range limit reached') }
 
 ### onMarkerDragStart
 
