@@ -285,42 +285,66 @@ class Timeline {
 
   getTransformations() {
     const crop = this.getCrop();
-    // const in = this.timeline.rangeSelector;
     const inMarker = this.rangeSelector.inMarker.getTimeIndex();
     const outMarker = this.rangeSelector.outMarker.getTimeIndex();
-    // get crop, time in / out
-    return { crop, time: { in: inMarker, out: outMarker } };
+    const rotation = context.getContext()?.rotation || 0;
+    return { crop, time: { in: inMarker, out: outMarker }, rotation };
   }
 
   cropVideo({ styles, data, delta, initial, relativeTransform }) {
-    this.video.style.transform = styles.transform;
-    this.video.style.transformOrigin = styles.transformOrigin;
+    const rotation = context.getContext()?.rotation || 0;
+    const isRotated = rotation === 90 || rotation === 270;
+    // width: auto aligns the video's CSS size with the croppie canvas (native resolution),
+    // so croppie's translate3d pixel values map correctly onto the video element.
+    this.video.style.width = 'auto';
+    if (isRotated) {
+      const nativeW = this.video.videoWidth;
+      const nativeH = this.video.videoHeight;
+      // croppie's transformOrigin is in portrait-canvas pixel space.
+      // Map it to the landscape video's pixel space so scale() pivots
+      // around the same physical point in the video content.
+      // 90°:  portrait (ox, oy) → landscape (nativeW - oy, ox)
+      // 270°: portrait (ox, oy) → landscape (oy, nativeH - ox)
+      const [ox_str, oy_str] = styles.transformOrigin.split(' ');
+      const ox = parseFloat(ox_str);
+      const oy = parseFloat(oy_str);
+      const land_ox = rotation === 90 ? nativeW - oy : oy;
+      const land_oy = rotation === 90 ? ox : nativeH - ox;
+      this.video.style.transform = `${styles.transform} translateY(-50%) rotate(${rotation}deg)`;
+      this.video.style.transformOrigin = `${land_ox}px ${land_oy}px`;
+      this.video.style.top = '50%';
+    } else {
+      // For 180° compose crop transform with the rotation so rotate(180deg) isn't lost.
+      const suffix = rotation === 180 ? ' rotate(180deg)' : '';
+      this.video.style.transform = styles.transform + suffix;
+      this.video.style.transformOrigin = styles.transformOrigin;
+      this.video.style.top = '';
+    }
   }
 
   getCurrentVideoFrameUrlObject() {
     return new Promise((resolve) => {
-      const vidContainer = document.querySelector('.video-container');
-      const { width, height } = vidContainer.getBoundingClientRect();
-      const canvas = createElement('canvas', {
-        properties: {
-          // set the canvas resolution to the video's resolution
-          width: this.video.videoWidth,
-          height: this.video.videoHeight,
-        },
-        style: {
-          width: width + 'px',
-          height: height + 'px',
-          border: '1px solid red',
-        },
-      });
-      // draw the video frame on the canvas
-      canvas.getContext('2d').drawImage(this.video, 0, 0);
-      // convert canvas to blob
+      const rotation = context.getContext()?.rotation || 0;
+      const isRotated = rotation === 90 || rotation === 270;
+      const nativeW = this.video.videoWidth;
+      const nativeH = this.video.videoHeight;
+      const canvasW = isRotated ? nativeH : nativeW;
+      const canvasH = isRotated ? nativeW : nativeH;
+      const canvas = createElement('canvas', { properties: { width: canvasW, height: canvasH } });
+      const ctx = canvas.getContext('2d');
+      if (isRotated) {
+        ctx.translate(canvasW / 2, canvasH / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.drawImage(this.video, -nativeW / 2, -nativeH / 2);
+      } else if (rotation === 180) {
+        ctx.translate(nativeW / 2, nativeH / 2);
+        ctx.rotate(Math.PI);
+        ctx.drawImage(this.video, -nativeW / 2, -nativeH / 2);
+      } else {
+        ctx.drawImage(this.video, 0, 0);
+      }
       canvas.toBlob(
-        (blob) => {
-          const urlObject = window.URL.createObjectURL(blob);
-          resolve(urlObject);
-        },
+        (blob) => resolve(window.URL.createObjectURL(blob)),
         'image/jpg',
         100
       );
@@ -502,11 +526,14 @@ class Timeline {
     const vidContainer = document.querySelector('.video-container');
     const cropContainer = vidContainer.querySelector('.crop-container');
     const { width: containerWidth, height: containerHeight } = vidContainer.getBoundingClientRect();
+    const rotation = context.getContext()?.rotation || 0;
+    const isRotated = rotation === 90 || rotation === 270;
+    const effectiveCropAspectRatio = isRotated ? 1 / this.cropAspectRatio : this.cropAspectRatio;
     let [x, y, cropWidth, cropHeight] = computeCrop(
       containerWidth,
       containerHeight,
       this.crop,
-      this.cropAspectRatio
+      effectiveCropAspectRatio
     );
     // if the crop aspect ratio is the same as the video aspect ratio
     if (cropWidth / cropHeight == this.video.videoWidth / this.video.videoHeight) {
