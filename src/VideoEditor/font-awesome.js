@@ -14,6 +14,7 @@ import {
   faSave,
   faTimes,
   faQuestion,
+  faRotateRight,
 } from '@fortawesome/free-solid-svg-icons';
 library.add(
   faPlay,
@@ -28,7 +29,8 @@ library.add(
   faCrop,
   faSave,
   faTimes,
-  faQuestion
+  faQuestion,
+  faRotateRight
 );
 dom.watch();
 

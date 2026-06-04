@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { getMaxHeightPercent, calcViewerMaxWidth, calcTransformValues } from './utils';
 import { createElement } from '../utils';
+import context from '../context.js';
 /**
  * Video Viewer
  *
@@ -192,9 +193,10 @@ class Viewer {
    * max height percent and the video aspect ratio.
    */
   updateViewerContainerDimensions() {
-    // use crop dimensions if set, otherwise use video dimensions
-    let width = this.crop?.width || this.video.videoWidth;
-    let height = this.crop?.height || this.video.videoHeight;
+    // videoDimensions has swapped axes after rotation (set by handleRotate)
+    const dims = context.getContext()?.videoDimensions;
+    let width = dims?.width || this.crop?.width || this.video.videoWidth;
+    let height = dims?.height || this.crop?.height || this.video.videoHeight;
     // aspect ratio of video (or crop)
     const aspectRatio = height / width;
     const vidWrap = this.video.closest('.video-wrap');

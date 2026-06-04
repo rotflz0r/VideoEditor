@@ -210,8 +210,39 @@ class VideoEditor {
       onToggleCrop: this.handleToggleCrop.bind(this),
       onClickSaveButton: this.handleSaveButtonClick.bind(this),
       onToggleMute: this.handleToggleMute.bind(this),
+      onRotate: this.handleRotate.bind(this),
       library: fontAwesomeLibrary,
     });
+  }
+
+  handleRotate() {
+    // 1. Śledzenie stanu rotacji
+    this.rotation = ((this.rotation || 0) + 90) % 360;
+
+    // 2. CSS transform na <video>
+    const nativeW = this.video.videoWidth;
+    const nativeH = this.video.videoHeight;
+    const isRotated = this.rotation === 90 || this.rotation === 270;
+    if (isRotated) {
+      const scale = nativeW / nativeH;
+      this.video.style.transform = `translateY(-50%) rotate(${this.rotation}deg) scale(${scale})`;
+      this.video.style.transformOrigin = '50% 50%';
+      this.video.style.top = '50%';
+      this.video.style.width = '';
+    } else {
+      this.video.style.transform = this.rotation === 180 ? 'rotate(180deg)' : 'none';
+      this.video.style.transformOrigin = '';
+      this.video.style.top = '';
+      this.video.style.width = '100%';
+    }
+
+    // 3. Aktualizacja videoDimensions (zamiana osi dla 90°/270°)
+    this.videoDimensions = isRotated
+      ? { width: nativeH, height: nativeW }
+      : { width: nativeW, height: nativeH };
+
+    // 4. Przerysuj kontener z nowymi proporcjami
+    this.viewer.updateViewerContainerDimensions();
   }
 
   handleToggleCrop(event, toggleState) {

@@ -9,9 +9,10 @@ import './info-bar.css';
  */
 class InfoBar {
   constructor({ currentIndex }) {
-    const { viewer, crop } = context.getContext();
+    const { viewer, crop, videoDimensions } = context.getContext();
     this.video = viewer.video;
     this.crop = crop;
+    this.videoDimensions = videoDimensions;
     this.duration = viewer.video.duration ?? '-';
     this.currentIndex = currentIndex ?? 0;
     this.infoBarContainer = null;
@@ -72,7 +73,9 @@ class InfoBar {
     const resolutionDiv = createElement('div', {
       properties: {
         className: 'resolution',
-        textContent: `Video Resolution: ${this.video.videoWidth} x ${this.video.videoHeight}`,
+        textContent: this.videoDimensions
+          ? `Video Resolution: ${this.videoDimensions.width} x ${this.videoDimensions.height}`
+          : 'Video Resolution: -',
       },
     });
     // frame
