@@ -29,6 +29,13 @@ export const defaultButtons = {
     className: 'crop-button',
     fontAwesomeIcon: 'fa fa-crop',
   },
+  rotate: {
+    index: 1,
+    label: 'Rotate',
+    title: 'Rotate 90°',
+    className: 'rotate-button',
+    fontAwesomeIcon: 'fa fa-rotate-right',
+  },
   save: {
     index: 2,
     label: 'Save',

@@ -39,6 +39,7 @@ class MenuBar {
     onClickSaveButton,
     onToggleCrop,
     onToggleMute,
+    onRotate,
     library,
   }) {
     // init inline start buttons
@@ -64,6 +65,10 @@ class MenuBar {
         ...defaultButtons.mute,
 
         onClick: onToggleMute,
+      },
+      rotate: {
+        ...defaultButtons.rotate,
+        onClick: onRotate,
       },
       crop: {
         ...defaultButtons.crop,

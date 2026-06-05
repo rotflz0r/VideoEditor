@@ -21,9 +21,10 @@ export default merge(common, {
     devMiddleware: {
       publicPath: 'auto',
     },
-    static: {
-      directory: path.join(__dirname, '../dist'),
-    },
+    static: [
+      { directory: path.join(__dirname, '../dist') },
+      { directory: path.join(__dirname, '../src/test') },
+    ],
     open: ['/index.html'],
     compress: true,
     hot: true,

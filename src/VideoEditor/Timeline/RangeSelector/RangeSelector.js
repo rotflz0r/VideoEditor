@@ -319,11 +319,14 @@ class RangeSelector {
       this.viewer.video.currentTime = this.initialMarkers.in;
       this.updateMarkerPosition(this.inMarker, this.initialMarkers.in);
     }
-    // handle max duration
-    const { maxDuration } = this.limit || {};
+    // handle max/min duration
+    const { maxDuration, minDuration } = this.limit || {};
     const initialDuration = this.initialMarkers.out - this.initialMarkers.in;
     if (maxDuration && initialDuration > maxDuration) {
       this.initialMarkers.out = this.initialMarkers.in + maxDuration;
+    }
+    if (minDuration && initialDuration < minDuration) {
+      this.initialMarkers.out = this.initialMarkers.in + minDuration;
     }
     if (this.initialMarkers?.out) {
       this.outMarker.setPositionByTimeIndex(this.initialMarkers.out);
@@ -515,6 +518,9 @@ class RangeSelector {
     if (this.limit?.maxDuration) {
       this.handleDragConstraintMaxDuration(event, draggable);
     }
+    if (this.limit?.minDuration) {
+      this.handleDragConstraintMinDuration(event, draggable);
+    }
   }
 
   handleDragConstraintMaxDuration(event, draggable) {
@@ -553,6 +559,38 @@ class RangeSelector {
         });
       }
       throw new Error(`Max duration reached: ${maxDuration}`);
+    }
+  }
+
+  handleDragConstraintMinDuration(event, draggable) {
+    const dragDirection = draggable.getDirection();
+    if (
+      (this.currentMarker.is('in') && dragDirection === 'left') ||
+      (this.currentMarker.is('out') && dragDirection === 'right')
+    ) {
+      return;
+    }
+    const inTime = this.inMarker.getTimeIndex();
+    const outTime = this.outMarker.getTimeIndex();
+    const duration = outTime - inTime;
+    const { minDuration } = this.limit;
+
+    if (duration < minDuration) {
+      if (this.currentMarker.is('in')) {
+        const maxInMarkerTime = parseFloat(outTime) - parseFloat(minDuration);
+        this.currentMarker.setPositionByTimeIndex(maxInMarkerTime);
+      }
+      if (this.currentMarker.is('out')) {
+        const minOutMarkerTime = parseFloat(inTime) + parseFloat(minDuration);
+        this.currentMarker.setPositionByTimeIndex(minOutMarkerTime);
+      }
+      if (this.onRangeLimit) {
+        this.onRangeLimit({
+          marker: this.currentMarker,
+          time: { in: inTime, out: outTime },
+          minDuration,
+        });
+      }
     }
   }
 
