@@ -215,34 +215,50 @@ class VideoEditor {
     });
   }
 
+  applyVideoRotationTransform() {
+    const rotation = this.rotation || 0;
+    const nativeW = this.video.videoWidth;
+    const nativeH = this.video.videoHeight;
+    const isRotated = rotation === 90 || rotation === 270;
+    if (isRotated) {
+      const scale = nativeW / nativeH;
+      this.video.style.transform = `translateY(-50%) rotate(${rotation}deg) scale(${scale})`;
+      this.video.style.transformOrigin = '50% 50%';
+      this.video.style.top = '50%';
+      this.video.style.width = '';
+    } else {
+      this.video.style.transform = rotation === 180 ? 'rotate(180deg)' : 'none';
+      this.video.style.transformOrigin = '';
+      this.video.style.top = '';
+      this.video.style.width = '100%';
+    }
+  }
+
   handleRotate() {
     // 1. Śledzenie stanu rotacji
     this.rotation = ((this.rotation || 0) + 90) % 360;
 
     // 2. CSS transform na <video>
+    this.applyVideoRotationTransform();
+
+    // 3. Aktualizacja videoDimensions (zamiana osi dla 90°/270°)
     const nativeW = this.video.videoWidth;
     const nativeH = this.video.videoHeight;
     const isRotated = this.rotation === 90 || this.rotation === 270;
-    if (isRotated) {
-      const scale = nativeW / nativeH;
-      this.video.style.transform = `translateY(-50%) rotate(${this.rotation}deg) scale(${scale})`;
-      this.video.style.transformOrigin = '50% 50%';
-      this.video.style.top = '50%';
-      this.video.style.width = '';
-    } else {
-      this.video.style.transform = this.rotation === 180 ? 'rotate(180deg)' : 'none';
-      this.video.style.transformOrigin = '';
-      this.video.style.top = '';
-      this.video.style.width = '100%';
-    }
-
-    // 3. Aktualizacja videoDimensions (zamiana osi dla 90°/270°)
     this.videoDimensions = isRotated
       ? { width: nativeH, height: nativeW }
       : { width: nativeW, height: nativeH };
 
     // 4. Przerysuj kontener z nowymi proporcjami
     this.viewer.updateViewerContainerDimensions();
+
+    // 5. Reset crop — nowa rotacja unieważnia poprzedni crop.
+    // resetCrop() niszczy croppera bez wywoływania applyCrop/cropVideo.
+    // toggleCropperOff() resetuje UI przycisku; applyCrop() wewnątrz zwróci wcześnie
+    // dzięki null-guardowi, więc video.style.transform z kroku 2 nie zostanie nadpisany.
+    this.timeline.resetCrop();
+    this.timeline.toggleCropperOff();
+    this.timeline.transformations = { ...this.timeline.transformations, crop: undefined };
   }
 
   handleToggleCrop(event, toggleState) {
@@ -317,11 +333,17 @@ class VideoEditor {
    * If the timeline has a cropper, it will be destroyed on resize
    */
   handleViewerResize() {
+    // calcTransformValues (called before this) rewrites video.style.transform as
+    // translate3d+scale, losing any rotate(). We fix this here.
     if (this.timeline.cropper) {
-      this.timeline.toggleCropperOff();
+      // Crop exists — re-apply it at the new container size, then tear down.
+      this.timeline.applyCrop();
       this.timeline.transformations = this.timeline.getTransformations();
-      this.timeline.cropper.destroy();
-      this.timeline.cropper = null;
+      this.timeline.resetCrop();
+      this.timeline.toggleCropperOff();
+    } else if (this.rotation) {
+      // No crop but rotation active — restore the rotation-only transform.
+      this.applyVideoRotationTransform();
     }
   }
 

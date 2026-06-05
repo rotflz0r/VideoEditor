@@ -254,13 +254,8 @@ class Timeline {
   }
 
   applyCrop() {
-    this.cropVideo({
-      styles: this.cropper.getTransformStyles(),
-      // data: this.cropper.getCropData(),
-      // delta: this.cropper.getCropDelta(),
-      // initial: this.cropper.getInitialValues(),
-      // relativeTransform: this.cropper.getRelativeTransformStyle(),
-    });
+    if (!this.cropper) return;
+    this.cropVideo();
     this.cropper.hide();
   }
 
@@ -288,38 +283,70 @@ class Timeline {
     const inMarker = this.rangeSelector.inMarker.getTimeIndex();
     const outMarker = this.rangeSelector.outMarker.getTimeIndex();
     const rotation = context.getContext()?.rotation || 0;
-    return { crop, time: { in: inMarker, out: outMarker }, rotation };
+    return { crop, time: { in: inMarker, out: outMarker }, rotation: { degrees: rotation } };
   }
 
-  cropVideo({ styles, data, delta, initial, relativeTransform }) {
+  cropVideo() {
     const rotation = context.getContext()?.rotation || 0;
-    const isRotated = rotation === 90 || rotation === 270;
-    // width: auto aligns the video's CSS size with the croppie canvas (native resolution),
-    // so croppie's translate3d pixel values map correctly onto the video element.
+    const nativeW = this.video.videoWidth;
+    const nativeH = this.video.videoHeight;
+
+    // Use getResult() pixel coordinates instead of croppie's CSS transform.
+    // This avoids the transformOrigin coordinate-space mismatch between the
+    // portrait canvas <img> and the landscape <video> element.
+    const { points } = this.cropper.getResult();
+    const [px1, py1, px2, py2] = points.map(parseFloat);
+
+    const cropW = px2 - px1;
+    if (cropW === 0) return;
+
+    const vidContainer = this.video.closest('.video-container');
+    const { width: cW, height: cH } = vidContainer.getBoundingClientRect();
+
     this.video.style.width = 'auto';
-    if (isRotated) {
-      const nativeW = this.video.videoWidth;
-      const nativeH = this.video.videoHeight;
-      // croppie's transformOrigin is in portrait-canvas pixel space.
-      // Map it to the landscape video's pixel space so scale() pivots
-      // around the same physical point in the video content.
-      // 90°:  portrait (ox, oy) → landscape (nativeW - oy, ox)
-      // 270°: portrait (ox, oy) → landscape (oy, nativeH - ox)
-      const [ox_str, oy_str] = styles.transformOrigin.split(' ');
-      const ox = parseFloat(ox_str);
-      const oy = parseFloat(oy_str);
-      const land_ox = rotation === 90 ? nativeW - oy : oy;
-      const land_oy = rotation === 90 ? ox : nativeH - ox;
-      this.video.style.transform = `${styles.transform} translateY(-50%) rotate(${rotation}deg)`;
-      this.video.style.transformOrigin = `${land_ox}px ${land_oy}px`;
-      this.video.style.top = '50%';
-    } else {
-      // For 180° compose crop transform with the rotation so rotate(180deg) isn't lost.
-      const suffix = rotation === 180 ? ' rotate(180deg)' : '';
-      this.video.style.transform = styles.transform + suffix;
-      this.video.style.transformOrigin = styles.transformOrigin;
-      this.video.style.top = '';
+    this.video.style.top = '';
+    this.video.style.transformOrigin = '0 0';
+
+    let transform;
+
+    if (rotation === 0) {
+      // Points are in landscape canvas space — apply directly.
+      const s = cW / cropW;
+      const tx = cW / 2 - (px1 + px2) / 2 * s;
+      const ty = cH / 2 - (py1 + py2) / 2 * s;
+      transform = `translate3d(${tx}px,${ty}px,0) scale(${s})`;
+
+    } else if (rotation === 180) {
+      // rotate(180deg) flips both axes — negate the crop-center contribution.
+      const s = cW / cropW;
+      const tx = cW / 2 + (px1 + px2) / 2 * s;
+      const ty = cH / 2 + (py1 + py2) / 2 * s;
+      transform = `translate3d(${tx}px,${ty}px,0) scale(${s}) rotate(180deg)`;
+
+    } else if (rotation === 90) {
+      // canvas (px,py) → video (vx=py, vy=nativeH-px)
+      // v_cx = (py1+py2)/2, v_cy = nativeH-(px1+px2)/2
+      // screen = (-vy*s+tx, vx*s+ty) → center at (cW/2, cH/2)
+      const s = cW / cropW;
+      const vcx = (py1 + py2) / 2;
+      const vcy = nativeH - (px1 + px2) / 2;
+      const tx = cW / 2 + vcy * s;
+      const ty = cH / 2 - vcx * s;
+      transform = `translate3d(${tx}px,${ty}px,0) rotate(90deg) scale(${s})`;
+
+    } else { // 270
+      // canvas (px,py) → video (vx=nativeW-py, vy=px)
+      // v_cx = nativeW-(py1+py2)/2, v_cy = (px1+px2)/2
+      // screen = (vy*s+tx, -vx*s+ty) → center at (cW/2, cH/2)
+      const s = cW / cropW;
+      const vcx = nativeW - (py1 + py2) / 2;
+      const vcy = (px1 + px2) / 2;
+      const tx = cW / 2 - vcy * s;
+      const ty = cH / 2 + vcx * s;
+      transform = `translate3d(${tx}px,${ty}px,0) rotate(270deg) scale(${s})`;
     }
+
+    this.video.style.transform = transform;
   }
 
   getCurrentVideoFrameUrlObject() {
@@ -564,6 +591,13 @@ class Timeline {
     if (cropButton.classList.contains('toggled')) {
       cropButton.click();
     }
+  }
+
+  resetCrop() {
+    if (!this.cropper) return;
+    this.cropper.hide();
+    this.cropper.destroy();
+    this.cropper = null;
   }
 
   createFramesContainer() {

@@ -250,13 +250,11 @@ class Viewer {
    * recalculate the primary ancestor (video container) dimensions
    */
   attachResizeEvent() {
-    const vidContainerFlexbox = this.video.closest('.video-flexbox-container');
-    const vidContainer = this.video.closest('.video-wrap');
-    // define the event here so we keep vidContainerFlexbox and vidContainer in scope
     window.addEventListener('resize', (event) => {
+      const vidContainerFlexbox = this.video.closest('.video-flexbox-container');
+      const vidContainer = this.video.closest('.video-wrap');
+      if (!vidContainerFlexbox || !vidContainer) return;
       // keep track of previous video bounds
-      const videoBounds = this.video.getBoundingClientRect();
-
       this.previousBounds = vidContainer.getBoundingClientRect();
       // update max height percent
       this.maxHeightPercent = getMaxHeightPercent(vidContainerFlexbox);

@@ -1,8 +1,10 @@
 import VideoEditor from '../VideoEditor';
 
 const videoSrcs = {
-  large: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-  small: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+  large: "http://localhost:9000/video.mp4",
+  small: "http://localhost:9000/video.mp4",
+  // large: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+  // small: 'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
 };
 
 window.onload = function () {
